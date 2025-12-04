@@ -1,0 +1,18 @@
+   ▲ Next.js 15.3.5
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.8.87:3000
+   - Environments: .env
+
+ ✓ Starting...
+ ✓ Ready in 2.5s
+ ○ Compiling / ...
+ ✓ Compiled / in 3.1s (1001 modules)
+ GET / 200 in 3508ms
+ ○ Compiling /api/auth/[...nextauth] ...
+ ✓ Compiled /api/auth/[...nextauth] in 1291ms (1241 modules)
+ GET / 200 in 315ms
+ GET /api/auth/session 200 in 3974ms
+ ✓ Compiled in 681ms (1002 modules)
+ GET / 200 in 134ms
+ ✓ Compiled in 377ms (487 modules)
+ GET / 200 in 44ms
