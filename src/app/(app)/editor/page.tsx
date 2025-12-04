@@ -60,9 +60,14 @@ function EditorContent() {
                 const newNote = await response.json();
                 setNotes([newNote, ...notes]);
                 setSelectedNoteId(newNote.id);
+            } else {
+                const errorData = await response.json();
+                console.error('Failed to create note:', errorData);
+                alert(`Failed to create note: ${errorData.message || response.statusText}`);
             }
         } catch (error) {
             console.error('Failed to create note:', error);
+            alert('An error occurred while creating the note. Please try again.');
         }
     };
 
