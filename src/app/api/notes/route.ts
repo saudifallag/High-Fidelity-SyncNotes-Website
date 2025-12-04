@@ -15,7 +15,22 @@ export async function GET(req: Request) {
             return NextResponse.json([]);
         }
         const notes = await prisma.note.findMany({
-            where: { userId: (session.user as any).id },
+            where: {
+                OR: [
+                    { userId: (session.user as any).id },
+                    { collaborators: { some: { id: (session.user as any).id } } }
+                ]
+            },
+            include: {
+                collaborators: {
+                    select: {
+                        id: true,
+                        email: true,
+                        name: true,
+                        image: true
+                    }
+                }
+            },
             orderBy: { updatedAt: "desc" },
         });
 
@@ -59,6 +74,16 @@ export async function POST(req: Request) {
                 annotations,
                 userId: (session.user as any).id,
             },
+            include: {
+                collaborators: {
+                    select: {
+                        id: true,
+                        email: true,
+                        name: true,
+                        image: true
+                    }
+                }
+            }
         });
 
         return NextResponse.json(note, { status: 201 });
@@ -92,12 +117,17 @@ export async function PUT(req: Request) {
             return NextResponse.json({ message: "Database not available" }, { status: 503 });
         }
 
-        // Verify ownership
+        // Verify ownership or collaboration
         const existingNote = await prisma.note.findUnique({
-            where: { id }
+            where: { id },
+            include: { collaborators: true }
         });
 
-        if (!existingNote || existingNote.userId !== (session.user as any).id) {
+        const userId = (session.user as any).id;
+        const isOwner = existingNote?.userId === userId;
+        const isCollaborator = existingNote?.collaborators.some(c => c.id === userId);
+
+        if (!existingNote || (!isOwner && !isCollaborator)) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
 
@@ -110,6 +140,16 @@ export async function PUT(req: Request) {
                 fileType,
                 annotations,
             },
+            include: {
+                collaborators: {
+                    select: {
+                        id: true,
+                        email: true,
+                        name: true,
+                        image: true
+                    }
+                }
+            }
         });
 
         return NextResponse.json(note);
@@ -144,20 +184,39 @@ export async function DELETE(req: Request) {
             return NextResponse.json({ message: "Database not available" }, { status: 503 });
         }
 
-        // Verify ownership
+        // Verify ownership or collaboration
         const existingNote = await prisma.note.findUnique({
-            where: { id }
+            where: { id },
+            include: { collaborators: true }
         });
 
-        if (!existingNote || existingNote.userId !== (session.user as any).id) {
+        const userId = (session.user as any).id;
+        const isOwner = existingNote?.userId === userId;
+        const isCollaborator = existingNote?.collaborators.some(c => c.id === userId);
+
+        if (!existingNote || (!isOwner && !isCollaborator)) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
 
-        await prisma!.note.delete({
-            where: { id },
-        });
+        if (isOwner) {
+            // Owner deletes the note entirely
+            await prisma!.note.delete({
+                where: { id },
+            });
+            return NextResponse.json({ message: "Note deleted" });
+        } else {
+            // Collaborator only removes themselves
+            await prisma!.note.update({
+                where: { id },
+                data: {
+                    collaborators: {
+                        disconnect: { id: userId }
+                    }
+                }
+            });
+            return NextResponse.json({ message: "Removed from shared note" });
+        }
 
-        return NextResponse.json({ message: "Note deleted" });
     } catch (error) {
         console.error("Error deleting note:", error);
         return NextResponse.json(

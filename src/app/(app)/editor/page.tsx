@@ -25,6 +25,10 @@ function EditorContent() {
     const searchParams = useSearchParams();
     const tagFilter = searchParams.get('tag');
 
+    const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+    const [shareEmail, setShareEmail] = useState('');
+    const [shareLoading, setShareLoading] = useState(false);
+
     useEffect(() => {
         fetchNotes();
     }, []);
@@ -101,6 +105,47 @@ function EditorContent() {
         }
     };
 
+    const handleShareNote = async () => {
+        if (!selectedNoteId || !shareEmail) return;
+
+        // Check subscription tier (mock check for now, ideally from session)
+        // In a real app, we'd check session.user.subscriptionTier
+        // For this demo, we'll assume everyone can share for testing, 
+        // OR we can fetch the user profile to check.
+
+        setShareLoading(true);
+        try {
+            const response = await fetch('/api/notes/share', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    noteId: selectedNoteId,
+                    email: shareEmail
+                }),
+            });
+
+            if (response.ok) {
+                alert('Note shared successfully!');
+                setShareEmail('');
+                setIsShareModalOpen(false);
+            } else {
+                const data = await response.json();
+                if (response.status === 403 && data.message.includes('Upgrade')) {
+                    if (confirm("Sharing is a premium feature. Upgrade to Pro?")) {
+                        window.location.href = '/pricing';
+                    }
+                } else {
+                    alert(data.message || 'Failed to share note');
+                }
+            }
+        } catch (error) {
+            console.error('Failed to share note:', error);
+            alert('An error occurred while sharing');
+        } finally {
+            setShareLoading(false);
+        }
+    };
+
     const filteredNotes = notes.filter((note) => {
         const matchesSearch = note.title.toLowerCase().includes(searchQuery.toLowerCase());
         // Basic tag filtering simulation (if tags were in DB, we'd check note.tags)
@@ -115,7 +160,7 @@ function EditorContent() {
     const selectedNote = notes.find((n) => n.id === selectedNoteId) || null;
 
     return (
-        <div className="flex h-[calc(100vh-4rem)]"> {/* Subtract header height approx */}
+        <div className="flex h-[calc(100vh-4rem)] relative"> {/* Subtract header height approx */}
             {/* Notes List Sidebar */}
             <div className="w-80 border-r border-gray-200 bg-white flex flex-col">
                 <div className="p-4 border-b border-gray-200 space-y-4">
@@ -167,13 +212,25 @@ function EditorContent() {
             </div>
 
             {/* Main Editor Area */}
-            <div className="flex-1 bg-gray-50 overflow-hidden">
+            <div className="flex-1 bg-gray-50 overflow-hidden relative">
                 {selectedNote ? (
-                    <NoteEditor
-                        note={selectedNote}
-                        onSave={handleSaveNote}
-                        onDelete={handleDeleteNote}
-                    />
+                    <>
+                        <div className="absolute top-4 right-4 z-10">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setIsShareModalOpen(true)}
+                                className="bg-white"
+                            >
+                                Share
+                            </Button>
+                        </div>
+                        <NoteEditor
+                            note={selectedNote}
+                            onSave={handleSaveNote}
+                            onDelete={handleDeleteNote}
+                        />
+                    </>
                 ) : (
                     <div className="h-full flex flex-col items-center justify-center text-gray-400">
                         <FileText className="w-16 h-16 mb-4 opacity-20" />
@@ -181,6 +238,32 @@ function EditorContent() {
                     </div>
                 )}
             </div>
+
+            {/* Share Modal */}
+            {isShareModalOpen && (
+                <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-white p-6 rounded-lg shadow-xl w-96">
+                        <h3 className="text-lg font-semibold mb-4">Share Note</h3>
+                        <p className="text-sm text-gray-500 mb-4">
+                            Enter the email address of the user you want to share this note with.
+                        </p>
+                        <Input
+                            placeholder="user@example.com"
+                            value={shareEmail}
+                            onChange={(e) => setShareEmail(e.target.value)}
+                            className="mb-4"
+                        />
+                        <div className="flex justify-end gap-2">
+                            <Button variant="outline" onClick={() => setIsShareModalOpen(false)}>
+                                Cancel
+                            </Button>
+                            <Button onClick={handleShareNote} disabled={shareLoading || !shareEmail}>
+                                {shareLoading ? 'Sharing...' : 'Share'}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
