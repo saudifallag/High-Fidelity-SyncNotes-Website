@@ -26,11 +26,14 @@ model User {
 }
 
 model Note {
-  id        String   @id @default(cuid())
-  title     String
-  content   String?  @db.Text
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id          String   @id @default(cuid())
+  title       String
+  content     String?  @db.Text
+  fileContent String?  @db.Text // Base64 encoded file
+  fileType    String?  // e.g., "application/pdf", "image/png"
+  annotations String?  @db.Text // JSON string of canvas data
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
