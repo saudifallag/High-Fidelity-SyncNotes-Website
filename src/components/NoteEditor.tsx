@@ -33,7 +33,10 @@ interface NoteEditorProps {
 
 const AVAILABLE_TAGS = ['Math', 'Work', 'Ideas', 'Personal', 'Urgent']
 
+import { useToast } from "@/hooks/use-toast"
+
 export default function NoteEditor({ note, onSave, onDelete, onShare }: NoteEditorProps) {
+    const { toast } = useToast()
     const [title, setTitle] = useState("")
     const [content, setContent] = useState("")
     const [fileContent, setFileContent] = useState<string | null>(null)
@@ -64,26 +67,62 @@ export default function NoteEditor({ note, onSave, onDelete, onShare }: NoteEdit
     const handleSave = async () => {
         if (!note) return
         setIsSaving(true)
-        await onSave({
-            id: note.id,
-            title,
-            content,
-            fileContent,
-            fileType,
-            annotations,
-            tags
-        })
-        setIsSaving(false)
+        try {
+            await onSave({
+                id: note.id,
+                title,
+                content,
+                fileContent,
+                fileType,
+                annotations,
+                tags
+            })
+            toast({
+                title: "Note Saved",
+                description: "Your changes have been saved successfully.",
+                className: "bg-green-50 border-green-200 text-green-900",
+            })
+        } catch (error) {
+            console.error("Save error:", error)
+            toast({
+                variant: "destructive",
+                title: "Save Failed",
+                description: "Could not save your note. Please try again.",
+            })
+        } finally {
+            setIsSaving(false)
+        }
     }
 
     const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0]
         if (file) {
+            if (file.size > 10 * 1024 * 1024) { // 10MB limit
+                toast({
+                    variant: "destructive",
+                    title: "File Too Large",
+                    description: "Please upload a file smaller than 10MB.",
+                })
+                return
+            }
+
             const reader = new FileReader()
             reader.onloadend = () => {
                 setFileContent(reader.result as string)
                 setFileType(file.type)
                 setAnnotations(null) // Clear annotations on new file upload
+                toast({
+                    title: "File Uploaded",
+                    description: `${file.name} has been attached to your note.`,
+                    className: "bg-green-50 border-green-200 text-green-900",
+                })
+            }
+            reader.onerror = () => {
+                toast({
+                    variant: "destructive",
+                    title: "Upload Failed",
+                    description: "Could not read the file. Please try again.",
+                })
             }
             reader.readAsDataURL(file)
         }

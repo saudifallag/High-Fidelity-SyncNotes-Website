@@ -18,7 +18,12 @@ interface Note {
     tags?: string[]; // Assuming tags might be added later or part of content
 }
 
+import { useToast } from "@/hooks/use-toast"
+import { useRouter } from "next/navigation"
+
 function EditorContent() {
+    const { toast } = useToast()
+    const router = useRouter()
     const [notes, setNotes] = useState<Note[]>([]);
     const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
@@ -121,6 +126,7 @@ function EditorContent() {
             // Send request for each email (or update API to handle array)
             // For now, we'll loop sequentially as the API likely expects one email
             // Ideally, update API to accept array
+            let allSharedSuccessfully = true;
             for (const email of emails) {
                 const response = await fetch('/api/notes/share', {
                     method: 'POST',
@@ -133,20 +139,41 @@ function EditorContent() {
 
                 if (!response.ok) {
                     const data = await response.json();
+                    allSharedSuccessfully = false;
                     if (response.status === 403 && data.message.includes('Upgrade')) {
-                        if (confirm("Sharing is a premium feature. Upgrade to Pro?")) {
-                            window.location.href = '/pricing';
-                            return; // Stop sharing
-                        }
+                        toast({
+                            variant: "destructive",
+                            title: "Upgrade Required",
+                            description: "Sharing is a premium feature. Upgrade to Pro?",
+                            action: <Button variant="outline" size="sm" onClick={() => router.push('/pricing')}>Upgrade</Button>,
+                        });
+                        setShareLoading(false);
+                        return; // Stop sharing if upgrade is required
                     } else {
                         console.error(`Failed to share with ${email}: ${data.message}`);
-                        // Continue sharing with others or alert?
-                        // For simplicity, we'll just log errors for individual failures
+                        toast({
+                            variant: "destructive",
+                            title: "Share Failed",
+                            description: `Could not share with ${email}: ${data.message || 'Unknown error'}`,
+                        });
                     }
                 }
             }
 
-            alert('Sharing process completed!');
+            if (allSharedSuccessfully) {
+                toast({
+                    title: "Note Shared",
+                    description: `Successfully shared with ${emails.length} user(s).`,
+                    className: "bg-green-50 border-green-200 text-green-900",
+                });
+            } else {
+                toast({
+                    variant: "destructive",
+                    title: "Partial Share",
+                    description: "Some emails could not be shared. Check console for details.",
+                });
+            }
+
             setShareEmail('');
             setIsShareModalOpen(false);
 

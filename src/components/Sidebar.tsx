@@ -3,32 +3,37 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useSession } from 'next-auth/react';
-import { Home, FileText, DollarSign, Info, Mail, HelpCircle, Circle, CheckCircle2, Plus } from 'lucide-react';
+import { LayoutDashboard, FileText, Settings, Plus, Hash, LogOut, User, Circle, CheckCircle2, Home, DollarSign, Info, Mail, HelpCircle } from 'lucide-react';
+import { useSession, signOut } from 'next-auth/react';
 import { SubscriptionBadge } from './SubscriptionBadge';
-
-const projects = [
-  { name: 'Math', color: '#10b981' },
-  { name: 'Work', color: '#3b82f6' },
-  { name: 'Ideas', color: '#f59e0b' },
-];
+import { useToast } from "@/hooks/use-toast"
 
 export function Sidebar() {
   const { data: session } = useSession();
   const pathname = usePathname();
-  const [filters, setFilters] = useState(projects);
+  const { toast } = useToast();
+  const [filters, setFilters] = useState<Array<{ name: string; color: string }>>([
+    { name: 'Math', color: '#10b981' },
+    { name: 'Work', color: '#3b82f6' },
+    { name: 'Ideas', color: '#f59e0b' },
+  ]);
 
   const isActive = (path: string) => {
     return pathname === path || pathname?.startsWith(`${path}/`);
   };
 
   const handleAddFilter = () => {
-    const name = prompt("Enter new filter name:");
+    const name = window.prompt("Enter new filter name:");
     if (name) {
       // Pick a random color
       const colors = ['#ef4444', '#f97316', '#84cc16', '#06b6d4', '#8b5cf6', '#ec4899'];
       const color = colors[Math.floor(Math.random() * colors.length)];
       setFilters([...filters, { name, color }]);
+      toast({
+        title: "Filter Added",
+        description: `Filter "${name}" created successfully.`,
+        className: "bg-green-50 border-green-200 text-green-900",
+      })
     }
   };
 

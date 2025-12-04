@@ -15,8 +15,12 @@ interface Note {
     collaborators?: { id: string }[];
 }
 
+import { useToast } from "@/hooks/use-toast"
+// ... imports
+
 export default function DashboardPage() {
     const { data: session } = useSession();
+    const { toast } = useToast();
     const [notes, setNotes] = useState<Note[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -30,9 +34,16 @@ export default function DashboardPage() {
             if (response.ok) {
                 const data = await response.json();
                 setNotes(data);
+            } else {
+                throw new Error('Failed to fetch notes');
             }
         } catch (error) {
             console.error('Failed to fetch notes:', error);
+            toast({
+                variant: "destructive",
+                title: "Sync Error",
+                description: "Could not load your notes. Please check your connection.",
+            })
         } finally {
             setLoading(false);
         }

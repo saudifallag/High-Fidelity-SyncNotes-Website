@@ -10,8 +10,11 @@ import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Mail, Lock, Eye, EyeOff, Star, User } from 'lucide-react'
 
+import { useToast } from '@/hooks/use-toast'
+
 export function PublicHeader() {
     const router = useRouter()
+    const { toast } = useToast()
     const [showPassword, setShowPassword] = useState(false)
     const [showConfirmPassword, setShowConfirmPassword] = useState(false)
     const [isSignInOpen, setIsSignInOpen] = useState(false)
@@ -29,14 +32,27 @@ export function PublicHeader() {
 
             if (result?.error) {
                 console.error('Login failed:', result.error)
-                alert('Demo login failed. Please try again.')
+                toast({
+                    variant: "destructive",
+                    title: "Login Failed",
+                    description: "Could not sign in with demo account. Please try again.",
+                })
             } else {
+                toast({
+                    title: "Welcome!",
+                    description: "Successfully signed in to demo account.",
+                    className: "bg-green-50 border-green-200 text-green-900",
+                })
                 router.push('/dashboard')
                 router.refresh()
             }
         } catch (error) {
             console.error('Login error:', error)
-            alert('An unexpected error occurred.')
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: "An unexpected error occurred.",
+            })
         } finally {
             setIsLoading(false)
         }
@@ -49,12 +65,20 @@ export function PublicHeader() {
         const confirmPasswordInput = document.getElementById('confirm-password') as HTMLInputElement
 
         if (!nameInput.value || !emailInput.value || !passwordInput.value) {
-            alert('Please fill in all fields')
+            toast({
+                variant: "destructive",
+                title: "Missing Fields",
+                description: "Please fill in all required fields.",
+            })
             return
         }
 
         if (passwordInput.value !== confirmPasswordInput.value) {
-            alert('Passwords do not match')
+            toast({
+                variant: "destructive",
+                title: "Password Mismatch",
+                description: "Passwords do not match.",
+            })
             return
         }
 
@@ -75,6 +99,12 @@ export function PublicHeader() {
                 throw new Error(data.message || 'Signup failed')
             }
 
+            toast({
+                title: "Account Created",
+                description: "Your account has been successfully created. Signing you in...",
+                className: "bg-green-50 border-green-200 text-green-900",
+            })
+
             await signIn('credentials', {
                 email: emailInput.value,
                 password: passwordInput.value,
@@ -83,7 +113,11 @@ export function PublicHeader() {
             })
         } catch (error: any) {
             console.error('Signup error:', error)
-            alert(error.message)
+            toast({
+                variant: "destructive",
+                title: "Signup Failed",
+                description: error.message || "Could not create account.",
+            })
         } finally {
             setIsLoading(false)
         }
