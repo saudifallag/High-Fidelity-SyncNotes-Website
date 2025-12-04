@@ -20,7 +20,7 @@ const DEMO_USER = {
     subscriptionTier: "STUDENT"
 };
 
-const handler = NextAuth({
+export const authOptions = {
     adapter: prisma ? PrismaAdapter(prisma) : undefined,
     providers: [
         CredentialsProvider({
@@ -117,10 +117,12 @@ const handler = NextAuth({
         }
     },
     session: {
-        strategy: "jwt",
+        strategy: "jwt" as const,
     },
     // Fallback secret for demo/development if env var is missing
     secret: process.env.NEXTAUTH_SECRET || "fallback-secret-for-demo-only-do-not-use-in-production",
-});
+};
+
+const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };

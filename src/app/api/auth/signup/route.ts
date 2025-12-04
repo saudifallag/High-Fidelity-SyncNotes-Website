@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { db as prisma } from "@/lib/db";
 import bcrypt from "bcryptjs";
-
-const prisma = new PrismaClient();
 
 export async function POST(req: Request) {
     try {
@@ -13,6 +11,10 @@ export async function POST(req: Request) {
                 { message: "Missing required fields" },
                 { status: 400 }
             );
+        }
+
+        if (!prisma) {
+            return NextResponse.json({ message: "Database not available" }, { status: 503 });
         }
 
         // Check if user already exists

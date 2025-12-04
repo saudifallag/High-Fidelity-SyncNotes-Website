@@ -1,20 +1,21 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
 import { getServerSession } from "next-auth";
-import { handler } from "../auth/[...nextauth]/route";
-
-const prisma = new PrismaClient();
+import { authOptions } from "../auth/[...nextauth]/route";
+import { db as prisma } from "@/lib/db";
 
 export async function GET(req: Request) {
-    const session = await getServerSession(handler);
+    const session = await getServerSession(authOptions);
 
     if (!session || !session.user) {
         return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
     try {
+        if (!prisma) {
+            return NextResponse.json([]);
+        }
         const notes = await prisma.note.findMany({
-            where: { userId: session.user.id },
+            where: { userId: (session.user as any).id },
             orderBy: { updatedAt: "desc" },
         });
 
@@ -29,7 +30,7 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-    const session = await getServerSession(handler);
+    const session = await getServerSession(authOptions);
 
     if (!session || !session.user) {
         return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
@@ -45,6 +46,10 @@ export async function POST(req: Request) {
             );
         }
 
+        if (!prisma) {
+            return NextResponse.json({ message: "Database not available" }, { status: 503 });
+        }
+
         const note = await prisma.note.create({
             data: {
                 title,
@@ -52,7 +57,7 @@ export async function POST(req: Request) {
                 fileContent,
                 fileType,
                 annotations,
-                userId: session.user.id,
+                userId: (session.user as any).id,
             },
         });
 
@@ -67,7 +72,7 @@ export async function POST(req: Request) {
 }
 
 export async function PUT(req: Request) {
-    const session = await getServerSession(handler);
+    const session = await getServerSession(authOptions);
 
     if (!session || !session.user) {
         return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
@@ -83,16 +88,20 @@ export async function PUT(req: Request) {
             );
         }
 
+        if (!prisma) {
+            return NextResponse.json({ message: "Database not available" }, { status: 503 });
+        }
+
         // Verify ownership
         const existingNote = await prisma.note.findUnique({
             where: { id }
         });
 
-        if (!existingNote || existingNote.userId !== session.user.id) {
+        if (!existingNote || existingNote.userId !== (session.user as any).id) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
 
-        const note = await prisma.note.update({
+        const note = await prisma!.note.update({
             where: { id },
             data: {
                 title,
@@ -114,7 +123,7 @@ export async function PUT(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-    const session = await getServerSession(handler);
+    const session = await getServerSession(authOptions);
 
     if (!session || !session.user) {
         return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
@@ -131,16 +140,20 @@ export async function DELETE(req: Request) {
             );
         }
 
+        if (!prisma) {
+            return NextResponse.json({ message: "Database not available" }, { status: 503 });
+        }
+
         // Verify ownership
         const existingNote = await prisma.note.findUnique({
             where: { id }
         });
 
-        if (!existingNote || existingNote.userId !== session.user.id) {
+        if (!existingNote || existingNote.userId !== (session.user as any).id) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
 
-        await prisma.note.delete({
+        await prisma!.note.delete({
             where: { id },
         });
 
