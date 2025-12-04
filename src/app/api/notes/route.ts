@@ -74,6 +74,19 @@ export async function POST(req: Request) {
 
         if (!userExists) {
             if (userId === 'demo-user-id') {
+                // Check if a user with this email already exists (but with a different ID)
+                const conflictingUser = await prisma.user.findUnique({
+                    where: { email: 'demo@syncnotes.com' }
+                });
+
+                if (conflictingUser) {
+                    // Delete the conflicting user to enforce the correct ID for the session
+                    // This relies on onDelete: Cascade in the schema to clean up related notes
+                    await prisma.user.delete({
+                        where: { email: 'demo@syncnotes.com' }
+                    });
+                }
+
                 await prisma.user.create({
                     data: {
                         id: userId,
