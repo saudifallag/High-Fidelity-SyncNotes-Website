@@ -62,7 +62,7 @@ Welcome to **SyncNotes**, a modern, high-fidelity note-taking application built 
     ```env
     DATABASE_URL="postgresql://neondb_owner:npg_wmNyViG39Xgf@ep-purple-glitter-a1igf9rh-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require"
     NEXTAUTH_SECRET="your-super-secret-key"
-    NEXTAUTH_URL="http://localhost:3000"
+    NEXTAUTH_URL="https://syncnotes.site"
     ```
 
 4.  **Initialize Database**:

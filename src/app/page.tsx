@@ -79,14 +79,22 @@ export default function WelcomePage() {
   const handleDemoSignIn = async () => {
     setIsLoading(true)
     try {
-      await signIn('credentials', {
+      const result = await signIn('credentials', {
         email: 'demo@syncnotes.com',
         password: 'demo12',
-        redirect: true,
-        callbackUrl: '/dashboard'
+        redirect: false, // Handle redirect manually to catch errors
       })
+
+      if (result?.error) {
+        console.error('Login failed:', result.error)
+        alert('Demo login failed. Please try again.')
+      } else {
+        router.push('/dashboard')
+        router.refresh()
+      }
     } catch (error) {
-      console.error('Login failed:', error)
+      console.error('Login error:', error)
+      alert('An unexpected error occurred.')
     } finally {
       setIsLoading(false)
     }
