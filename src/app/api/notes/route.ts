@@ -65,6 +65,29 @@ export async function POST(req: Request) {
             return NextResponse.json({ message: "Database not available" }, { status: 503 });
         }
 
+        const userId = (session.user as any).id;
+
+        // Ensure user exists in DB (specifically for Demo User who bypasses DB auth)
+        const userExists = await prisma.user.findUnique({
+            where: { id: userId }
+        });
+
+        if (!userExists) {
+            if (userId === 'demo-user-id') {
+                await prisma.user.create({
+                    data: {
+                        id: userId,
+                        email: 'demo@syncnotes.com',
+                        name: 'Demo User',
+                        image: '/placeholder-user.jpg',
+                        subscriptionTier: 'FREE'
+                    }
+                });
+            } else {
+                return NextResponse.json({ message: "User account not found" }, { status: 404 });
+            }
+        }
+
         const note = await prisma.note.create({
             data: {
                 title,
@@ -72,7 +95,7 @@ export async function POST(req: Request) {
                 fileContent,
                 fileType,
                 annotations,
-                userId: (session.user as any).id,
+                userId: userId,
             },
             include: {
                 collaborators: {
@@ -87,10 +110,10 @@ export async function POST(req: Request) {
         });
 
         return NextResponse.json(note, { status: 201 });
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error creating note:", error);
         return NextResponse.json(
-            { message: "Internal server error" },
+            { message: `Internal server error: ${error.message}` },
             { status: 500 }
         );
     }
