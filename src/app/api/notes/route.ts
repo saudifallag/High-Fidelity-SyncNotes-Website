@@ -3,6 +3,14 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
 import { db as prisma } from "@/lib/db";
 
+export const config = {
+    api: {
+        bodyParser: {
+            sizeLimit: '10mb',
+        },
+    },
+}
+
 export async function GET(req: Request) {
     const session = await getServerSession(authOptions);
 
@@ -52,7 +60,7 @@ export async function POST(req: Request) {
     }
 
     try {
-        const { title, content, fileContent, fileType, annotations } = await req.json();
+        const { title, content, fileContent, fileType, annotations, tags } = await req.json();
 
         if (!title) {
             return NextResponse.json(
@@ -108,6 +116,7 @@ export async function POST(req: Request) {
                 fileContent,
                 fileType,
                 annotations,
+                tags,
                 userId: userId,
             },
             include: {
@@ -140,7 +149,7 @@ export async function PUT(req: Request) {
     }
 
     try {
-        const { id, title, content, fileContent, fileType, annotations } = await req.json();
+        const { id, title, content, fileContent, fileType, annotations, tags } = await req.json();
 
         if (!id || !title) {
             return NextResponse.json(
@@ -175,6 +184,7 @@ export async function PUT(req: Request) {
                 fileContent,
                 fileType,
                 annotations,
+                tags,
             },
             include: {
                 collaborators: {
