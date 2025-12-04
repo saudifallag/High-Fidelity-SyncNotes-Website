@@ -11,9 +11,10 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/b
 interface PDFViewerProps {
     fileContent: string // Base64
     onPageChange: (pageNumber: number) => void
+    children?: React.ReactNode
 }
 
-export default function PDFViewer({ fileContent, onPageChange }: PDFViewerProps) {
+export default function PDFViewer({ fileContent, onPageChange, children }: PDFViewerProps) {
     const [numPages, setNumPages] = useState<number>(0)
     const [pageNumber, setPageNumber] = useState<number>(1)
 
@@ -30,7 +31,7 @@ export default function PDFViewer({ fileContent, onPageChange }: PDFViewerProps)
 
     return (
         <div className="flex flex-col items-center">
-            <div className="border rounded-lg overflow-hidden shadow-md mb-4">
+            <div className="border rounded-lg overflow-hidden shadow-md mb-4 relative">
                 <Document
                     file={fileContent}
                     onLoadSuccess={onDocumentLoadSuccess}
@@ -43,6 +44,7 @@ export default function PDFViewer({ fileContent, onPageChange }: PDFViewerProps)
                         renderAnnotationLayer={false}
                     />
                 </Document>
+                {children && <div className="absolute inset-0 z-10 pointer-events-none">{children}</div>}
             </div>
 
             <div className="flex items-center gap-4">

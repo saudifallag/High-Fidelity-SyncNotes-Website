@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useRef, useState } from 'react'
-import { fabric } from 'fabric'
+import { Canvas, FabricImage, PencilBrush } from 'fabric'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { Eraser, Pen, Undo, Redo, Save } from 'lucide-react'
@@ -10,23 +10,27 @@ interface CanvasEditorProps {
     fileContent?: string // Base64 image or PDF page image
     initialAnnotations?: string // JSON string
     onSave: (annotations: string) => void
+    transparent?: boolean
 }
 
-export default function CanvasEditor({ fileContent, initialAnnotations, onSave }: CanvasEditorProps) {
+export default function CanvasEditor({ fileContent, initialAnnotations, onSave, transparent = false }: CanvasEditorProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null)
-    const [fabricCanvas, setFabricCanvas] = useState<fabric.Canvas | null>(null)
+    const [fabricCanvas, setFabricCanvas] = useState<Canvas | null>(null)
     const [brushSize, setBrushSize] = useState([5])
     const [color, setColor] = useState('#000000')
     const [isEraser, setIsEraser] = useState(false)
+
+    // ... existing useEffects ...
 
     // Initialize Canvas
     useEffect(() => {
         if (!canvasRef.current) return
 
-        const canvas = new fabric.Canvas(canvasRef.current, {
+        const canvas = new Canvas(canvasRef.current, {
             isDrawingMode: true,
             width: 800,
             height: 600,
+            backgroundColor: transparent ? 'transparent' : undefined // Ensure transparent bg
         })
 
         setFabricCanvas(canvas)
@@ -34,13 +38,13 @@ export default function CanvasEditor({ fileContent, initialAnnotations, onSave }
         return () => {
             canvas.dispose()
         }
-    }, [])
+    }, [transparent]) // Re-init if transparent changes
 
     // Load Background Image
     useEffect(() => {
         if (!fabricCanvas || !fileContent) return
 
-        fabric.Image.fromURL(fileContent, (img) => {
+        FabricImage.fromURL(fileContent).then((img) => {
             // Scale image to fit canvas width
             const scale = (fabricCanvas.width || 800) / (img.width || 1)
             img.set({
@@ -50,9 +54,12 @@ export default function CanvasEditor({ fileContent, initialAnnotations, onSave }
                 originY: 'top',
             })
 
-            fabricCanvas.setBackgroundImage(img, fabricCanvas.renderAll.bind(fabricCanvas))
+            fabricCanvas.backgroundImage = img
+            fabricCanvas.renderAll()
             // Adjust canvas height to image height
             fabricCanvas.setHeight((img.height || 600) * scale)
+        }).catch(err => {
+            console.error("Error loading image:", err)
         })
     }, [fabricCanvas, fileContent])
 
@@ -62,7 +69,9 @@ export default function CanvasEditor({ fileContent, initialAnnotations, onSave }
 
         try {
             const data = JSON.parse(initialAnnotations)
-            fabricCanvas.loadFromJSON(data, fabricCanvas.renderAll.bind(fabricCanvas))
+            fabricCanvas.loadFromJSON(data).then(() => {
+                fabricCanvas.renderAll()
+            })
         } catch (e) {
             console.error("Failed to load annotations", e)
         }
@@ -72,7 +81,7 @@ export default function CanvasEditor({ fileContent, initialAnnotations, onSave }
     useEffect(() => {
         if (!fabricCanvas) return
 
-        fabricCanvas.freeDrawingBrush = new fabric.PencilBrush(fabricCanvas)
+        fabricCanvas.freeDrawingBrush = new PencilBrush(fabricCanvas)
         fabricCanvas.freeDrawingBrush.width = brushSize[0]
         fabricCanvas.freeDrawingBrush.color = isEraser ? '#ffffff' : color // Simple eraser (white paint)
 
@@ -86,8 +95,8 @@ export default function CanvasEditor({ fileContent, initialAnnotations, onSave }
     }
 
     return (
-        <div className="flex flex-col gap-4 border rounded-lg p-4 bg-gray-50">
-            <div className="flex items-center gap-4 bg-white p-2 rounded shadow-sm">
+        <div className={`flex flex-col gap-4 ${transparent ? '' : 'border rounded-lg p-4 bg-gray-50'}`}>
+            <div className={`flex items-center gap-4 p-2 rounded shadow-sm ${transparent ? 'bg-white/90 backdrop-blur-sm border absolute top-2 left-2 right-2 z-20' : 'bg-white'}`}>
                 <Button
                     variant={!isEraser ? "default" : "outline"}
                     size="icon"
@@ -130,7 +139,7 @@ export default function CanvasEditor({ fileContent, initialAnnotations, onSave }
                 </Button>
             </div>
 
-            <div className="border border-gray-200 shadow-inner bg-white mx-auto">
+            <div className={`${transparent ? '' : 'border border-gray-200 shadow-inner bg-white mx-auto'}`}>
                 <canvas ref={canvasRef} />
             </div>
         </div>

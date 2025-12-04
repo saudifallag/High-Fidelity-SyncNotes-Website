@@ -149,12 +149,15 @@ export default function NoteEditor({ note, onSave, onDelete }: NoteEditorProps) 
                                 <PDFViewer
                                     fileContent={fileContent}
                                     onPageChange={() => { }} // TODO: Handle multi-page annotations
-                                />
-                                {/* Overlay Canvas for PDF - Simplified for single page demo */}
-                                <CanvasEditor
-                                    initialAnnotations={annotations || undefined}
-                                    onSave={setAnnotations}
-                                />
+                                >
+                                    <div className="pointer-events-auto w-full h-full">
+                                        <CanvasEditor
+                                            initialAnnotations={annotations || undefined}
+                                            onSave={setAnnotations}
+                                            transparent={true}
+                                        />
+                                    </div>
+                                </PDFViewer>
                             </div>
                         ) : (
                             <CanvasEditor
