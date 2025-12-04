@@ -17,7 +17,7 @@ const DEMO_USER = {
     name: "Demo User",
     email: "demo@syncnotes.com",
     image: null,
-    subscriptionTier: "STUDENT"
+    subscriptionTier: "FREE"
 };
 
 export const authOptions = {

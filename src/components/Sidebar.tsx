@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { Home, FileText, DollarSign, Info, Mail, HelpCircle, Circle, CheckCircle2 } from 'lucide-react';
+import { Home, FileText, DollarSign, Info, Mail, HelpCircle, Circle, CheckCircle2, Plus } from 'lucide-react';
+import { SubscriptionBadge } from './SubscriptionBadge';
 
 const projects = [
   { name: 'Math', color: '#10b981' },
@@ -46,8 +47,8 @@ export function Sidebar() {
           </Link>
 
           <Link
-            href="/dashboard/editor"
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-[#14b8a6] focus:ring-offset-2 focus:ring-offset-[#2d3748] ${isActive('/dashboard/editor')
+            href="/editor"
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-[#14b8a6] focus:ring-offset-2 focus:ring-offset-[#2d3748] ${isActive('/editor')
               ? 'bg-[#14b8a6] text-white'
               : 'text-gray-300 hover:bg-gray-700 hover:text-white'
               }`}
@@ -57,8 +58,8 @@ export function Sidebar() {
           </Link>
 
           <Link
-            href="/dashboard/pricing"
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-[#14b8a6] focus:ring-offset-2 focus:ring-offset-[#2d3748] ${isActive('/dashboard/pricing')
+            href="/pricing"
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-[#14b8a6] focus:ring-offset-2 focus:ring-offset-[#2d3748] ${isActive('/pricing')
               ? 'bg-[#14b8a6] text-white'
               : 'text-gray-300 hover:bg-gray-700 hover:text-white'
               }`}
@@ -68,8 +69,8 @@ export function Sidebar() {
           </Link>
 
           <Link
-            href="/dashboard/about"
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-[#14b8a6] focus:ring-offset-2 focus:ring-offset-[#2d3748] ${isActive('/dashboard/about')
+            href="/about"
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-[#14b8a6] focus:ring-offset-2 focus:ring-offset-[#2d3748] ${isActive('/about')
               ? 'bg-[#14b8a6] text-white'
               : 'text-gray-300 hover:bg-gray-700 hover:text-white'
               }`}
@@ -79,8 +80,8 @@ export function Sidebar() {
           </Link>
 
           <Link
-            href="/dashboard/contact"
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-[#14b8a6] focus:ring-offset-2 focus:ring-offset-[#2d3748] ${isActive('/dashboard/contact')
+            href="/contact"
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-[#14b8a6] focus:ring-offset-2 focus:ring-offset-[#2d3748] ${isActive('/contact')
               ? 'bg-[#14b8a6] text-white'
               : 'text-gray-300 hover:bg-gray-700 hover:text-white'
               }`}
@@ -90,8 +91,8 @@ export function Sidebar() {
           </Link>
 
           <Link
-            href="/dashboard/support"
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-[#14b8a6] focus:ring-offset-2 focus:ring-offset-[#2d3748] ${isActive('/dashboard/support')
+            href="/support"
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-[#14b8a6] focus:ring-offset-2 focus:ring-offset-[#2d3748] ${isActive('/support')
               ? 'bg-[#14b8a6] text-white'
               : 'text-gray-300 hover:bg-gray-700 hover:text-white'
               }`}
@@ -101,20 +102,24 @@ export function Sidebar() {
           </Link>
         </div>
 
-        {/* Projects Section */}
+        {/* Filters Section */}
         <div className="mt-8">
-          <div className="px-4 mb-3 text-gray-400 text-xs uppercase tracking-wider">
-            Projects
+          <div className="px-4 mb-3 flex items-center justify-between text-gray-400 text-xs uppercase tracking-wider">
+            <span>Filters</span>
+            <button className="hover:text-white transition-colors">
+              <Plus className="w-4 h-4" />
+            </button>
           </div>
           <div className="space-y-2">
             {projects.map((project) => (
-              <button
+              <Link
                 key={project.name}
+                href={`/editor?tag=${project.name}`}
                 className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-gray-300 hover:bg-gray-700 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-[#14b8a6] focus:ring-offset-2 focus:ring-offset-[#2d3748]"
               >
                 <Circle className="w-4 h-4" style={{ color: project.color, fill: project.color }} />
                 <span>{project.name}</span>
-              </button>
+              </Link>
             ))}
           </div>
         </div>
@@ -132,9 +137,12 @@ export function Sidebar() {
               {session?.user?.name?.substring(0, 2).toUpperCase() || 'U'}
             </span>
           </div>
-          <span className="text-sm truncate max-w-[140px]">
-            {session?.user?.name || session?.user?.email || 'User'}
-          </span>
+          <div className="flex flex-col overflow-hidden">
+            <span className="text-sm truncate max-w-[140px] font-medium">
+              {session?.user?.name || session?.user?.email || 'User'}
+            </span>
+            <SubscriptionBadge tier={(session?.user as any)?.subscriptionTier || 'FREE'} />
+          </div>
         </div>
       </div>
     </aside>
