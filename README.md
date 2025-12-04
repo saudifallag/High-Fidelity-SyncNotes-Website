@@ -60,7 +60,7 @@ Welcome to **SyncNotes**, a modern, high-fidelity note-taking application built 
 3.  **Set up Environment Variables**:
     Create a `.env` file in the root directory:
     ```env
-    DATABASE_URL="postgresql://neondb_owner:npg_M0j5XChFDxca@ep-jolly-resonance-a19uez7v-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require"
+    DATABASE_URL="postgresql://neondb_owner:npg_wmNyViG39Xgf@ep-purple-glitter-a1igf9rh-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require"
     NEXTAUTH_SECRET="your-super-secret-key"
     NEXTAUTH_URL="http://localhost:3000"
     ```
