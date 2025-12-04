@@ -4,7 +4,13 @@ import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
-const prisma = new PrismaClient();
+let prisma: PrismaClient | undefined;
+
+try {
+    prisma = new PrismaClient();
+} catch (error) {
+    console.warn("Failed to initialize Prisma Client. Database features will be disabled.", error);
+}
 
 const DEMO_USER = {
     id: "demo-user-id",
@@ -15,7 +21,7 @@ const DEMO_USER = {
 };
 
 const handler = NextAuth({
-    adapter: PrismaAdapter(prisma),
+    adapter: prisma ? PrismaAdapter(prisma) : undefined,
     providers: [
         CredentialsProvider({
             name: "Credentials",
@@ -36,31 +42,41 @@ const handler = NextAuth({
                     return DEMO_USER;
                 }
 
-                const user = await prisma.user.findUnique({
-                    where: { email: credentials.email }
-                });
+                try {
+                    if (!prisma) {
+                        console.log("Prisma client not available, skipping DB check");
+                        return null;
+                    }
 
-                console.log("User found:", user ? "Yes" : "No");
+                    const user = await prisma.user.findUnique({
+                        where: { email: credentials.email }
+                    });
 
-                if (!user || !user.password) {
-                    console.log("User not found or no password");
+                    console.log("User found:", user ? "Yes" : "No");
+
+                    if (!user || !user.password) {
+                        console.log("User not found or no password");
+                        return null;
+                    }
+
+                    const isValid = await bcrypt.compare(credentials.password, user.password);
+                    console.log("Password valid:", isValid);
+
+                    if (!isValid) {
+                        return null;
+                    }
+
+                    return {
+                        id: user.id,
+                        name: user.name,
+                        email: user.email,
+                        image: user.image,
+                        subscriptionTier: user.subscriptionTier,
+                    };
+                } catch (error) {
+                    console.error("Database error during authorization:", error);
                     return null;
                 }
-
-                const isValid = await bcrypt.compare(credentials.password, user.password);
-                console.log("Password valid:", isValid);
-
-                if (!isValid) {
-                    return null;
-                }
-
-                return {
-                    id: user.id,
-                    name: user.name,
-                    email: user.email,
-                    image: user.image,
-                    subscriptionTier: user.subscriptionTier,
-                };
             }
         })
     ],
@@ -78,11 +94,18 @@ const handler = NextAuth({
                     return session;
                 }
 
-                // Fetch latest user data to get subscription tier
-                const user = await prisma.user.findUnique({
-                    where: { id: token.sub as string }
-                });
-                (session.user as any).subscriptionTier = user?.subscriptionTier;
+                try {
+                    if (!prisma) {
+                        return session;
+                    }
+                    // Fetch latest user data to get subscription tier
+                    const user = await prisma.user.findUnique({
+                        where: { id: token.sub as string }
+                    });
+                    (session.user as any).subscriptionTier = user?.subscriptionTier;
+                } catch (error) {
+                    console.error("Database error during session callback:", error);
+                }
             }
             return session;
         },
