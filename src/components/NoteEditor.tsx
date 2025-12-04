@@ -35,6 +35,7 @@ export default function NoteEditor({ note, onSave, onDelete }: NoteEditorProps) 
     const [fileContent, setFileContent] = useState<string | null>(null)
     const [fileType, setFileType] = useState<string | null>(null)
     const [annotations, setAnnotations] = useState<string | null>(null)
+    const [pdfDimensions, setPdfDimensions] = useState<{ width: number; height: number } | null>(null)
     const [isSaving, setIsSaving] = useState(false)
 
     useEffect(() => {
@@ -53,43 +54,35 @@ export default function NoteEditor({ note, onSave, onDelete }: NoteEditorProps) 
         }
     }, [note])
 
-    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0]
-        if (!file) return
-
-        const reader = new FileReader()
-        reader.onload = (event) => {
-            const result = event.target?.result as string
-            setFileContent(result)
-            setFileType(file.type)
-        }
-        reader.readAsDataURL(file)
-    }
-
     const handleSave = async () => {
-        if (!title.trim()) return
+        if (!note) return
         setIsSaving(true)
         await onSave({
-            ...note,
+            id: note.id,
             title,
             content,
             fileContent,
             fileType,
-            annotations
+            annotations,
         })
         setIsSaving(false)
     }
 
-    if (!note) {
-        return (
-            <div className="h-full flex items-center justify-center text-gray-400">
-                Select a note to edit or create a new one
-            </div>
-        )
+    const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0]
+        if (file) {
+            const reader = new FileReader()
+            reader.onloadend = () => {
+                setFileContent(reader.result as string)
+                setFileType(file.type)
+                setAnnotations(null) // Clear annotations on new file upload
+            }
+            reader.readAsDataURL(file)
+        }
     }
 
     return (
-        <div className="h-full flex flex-col gap-6 p-6 max-w-4xl mx-auto">
+        <div className="h-full flex flex-col gap-6 p-6 max-w-7xl mx-auto">
             <div className="flex justify-between items-center">
                 <Input
                     value={title}
@@ -101,7 +94,7 @@ export default function NoteEditor({ note, onSave, onDelete }: NoteEditorProps) 
                     <Button
                         variant="destructive"
                         size="icon"
-                        onClick={() => onDelete(note.id)}
+                        onClick={() => note && onDelete(note.id)}
                     >
                         <Trash2 className="w-4 h-4" />
                     </Button>
@@ -149,12 +142,16 @@ export default function NoteEditor({ note, onSave, onDelete }: NoteEditorProps) 
                                 <PDFViewer
                                     fileContent={fileContent}
                                     onPageChange={() => { }} // TODO: Handle multi-page annotations
+                                    width={1000}
+                                    onPageLoad={(dims) => setPdfDimensions(dims)}
                                 >
                                     <div className="pointer-events-auto w-full h-full">
                                         <CanvasEditor
                                             initialAnnotations={annotations || undefined}
                                             onSave={setAnnotations}
                                             transparent={true}
+                                            width={pdfDimensions?.width || 1000}
+                                            height={pdfDimensions?.height || 800}
                                         />
                                     </div>
                                 </PDFViewer>

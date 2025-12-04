@@ -12,15 +12,23 @@ interface PDFViewerProps {
     fileContent: string // Base64
     onPageChange: (pageNumber: number) => void
     children?: React.ReactNode
+    width?: number
+    onPageLoad?: (dimensions: { width: number; height: number }) => void
 }
 
-export default function PDFViewer({ fileContent, onPageChange, children }: PDFViewerProps) {
+export default function PDFViewer({ fileContent, onPageChange, children, width = 1000, onPageLoad }: PDFViewerProps) {
     const [numPages, setNumPages] = useState<number>(0)
     const [pageNumber, setPageNumber] = useState<number>(1)
 
     function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
         setNumPages(numPages)
         onPageChange(1)
+    }
+
+    function onPageLoadSuccess(page: { width: number; height: number; originalWidth: number; originalHeight: number }) {
+        if (onPageLoad) {
+            onPageLoad({ width: page.width, height: page.height })
+        }
     }
 
     const changePage = (offset: number) => {
@@ -31,7 +39,7 @@ export default function PDFViewer({ fileContent, onPageChange, children }: PDFVi
 
     return (
         <div className="flex flex-col items-center">
-            <div className="border rounded-lg overflow-hidden shadow-md mb-4 relative">
+            <div className="border rounded-lg overflow-hidden shadow-md mb-4 relative" style={{ width: width }}>
                 <Document
                     file={fileContent}
                     onLoadSuccess={onDocumentLoadSuccess}
@@ -39,9 +47,10 @@ export default function PDFViewer({ fileContent, onPageChange, children }: PDFVi
                 >
                     <Page
                         pageNumber={pageNumber}
-                        width={800}
+                        width={width}
                         renderTextLayer={false}
                         renderAnnotationLayer={false}
+                        onLoadSuccess={onPageLoadSuccess}
                     />
                 </Document>
                 {children && <div className="absolute inset-0 z-10 pointer-events-none">{children}</div>}

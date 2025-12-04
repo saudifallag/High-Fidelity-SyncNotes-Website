@@ -11,9 +11,11 @@ interface CanvasEditorProps {
     initialAnnotations?: string // JSON string
     onSave: (annotations: string) => void
     transparent?: boolean
+    width?: number
+    height?: number
 }
 
-export default function CanvasEditor({ fileContent, initialAnnotations, onSave, transparent = false }: CanvasEditorProps) {
+export default function CanvasEditor({ fileContent, initialAnnotations, onSave, transparent = false, width = 800, height = 600 }: CanvasEditorProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const [fabricCanvas, setFabricCanvas] = useState<Canvas | null>(null)
     const [brushSize, setBrushSize] = useState([5])
@@ -28,8 +30,8 @@ export default function CanvasEditor({ fileContent, initialAnnotations, onSave, 
 
         const canvas = new Canvas(canvasRef.current, {
             isDrawingMode: true,
-            width: 800,
-            height: 600,
+            width: width,
+            height: height,
             backgroundColor: transparent ? 'transparent' : undefined // Ensure transparent bg
         })
 
@@ -38,7 +40,7 @@ export default function CanvasEditor({ fileContent, initialAnnotations, onSave, 
         return () => {
             canvas.dispose()
         }
-    }, [transparent]) // Re-init if transparent changes
+    }, [transparent, width, height]) // Re-init if dimensions change
 
     // Load Background Image
     useEffect(() => {
@@ -46,7 +48,7 @@ export default function CanvasEditor({ fileContent, initialAnnotations, onSave, 
 
         FabricImage.fromURL(fileContent).then((img) => {
             // Scale image to fit canvas width
-            const scale = (fabricCanvas.width || 800) / (img.width || 1)
+            const scale = (fabricCanvas.width || width) / (img.width || 1)
             img.set({
                 scaleX: scale,
                 scaleY: scale,
@@ -57,11 +59,14 @@ export default function CanvasEditor({ fileContent, initialAnnotations, onSave, 
             fabricCanvas.backgroundImage = img
             fabricCanvas.renderAll()
             // Adjust canvas height to image height
-            fabricCanvas.setHeight((img.height || 600) * scale)
+            // Only adjust height if we are NOT in transparent overlay mode (where height is passed as prop)
+            if (!transparent) {
+                fabricCanvas.setHeight((img.height || height) * scale)
+            }
         }).catch(err => {
             console.error("Error loading image:", err)
         })
-    }, [fabricCanvas, fileContent])
+    }, [fabricCanvas, fileContent, transparent, width, height])
 
     // Load Initial Annotations
     useEffect(() => {
