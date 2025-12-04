@@ -224,7 +224,7 @@ export default function WelcomePage() {
     },
     {
       title: "Student Plan",
-      price: "$3/month",
+      price: "$5/month",
       icon: <Award className="w-8 h-8 text-teal-500" />,
       features: [
         "Unlimited notes",
@@ -239,7 +239,7 @@ export default function WelcomePage() {
     },
     {
       title: "Pro Plan",
-      price: "$9/month",
+      price: "$10/month",
       icon: <Rocket className="w-8 h-8 text-purple-500" />,
       features: [
         "Everything in Student",
