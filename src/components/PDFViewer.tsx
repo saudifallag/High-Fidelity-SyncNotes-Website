@@ -20,9 +20,17 @@ export default function PDFViewer({ fileContent, onPageChange, children, width =
     const [numPages, setNumPages] = useState<number>(0)
     const [pageNumber, setPageNumber] = useState<number>(1)
 
+    const [error, setError] = useState<Error | null>(null)
+
     function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
         setNumPages(numPages)
         onPageChange(1)
+        setError(null)
+    }
+
+    function onDocumentLoadError(err: Error) {
+        console.error("PDF Load Error:", err)
+        setError(err)
     }
 
     function onPageLoadSuccess(page: { width: number; height: number; originalWidth: number; originalHeight: number }) {
@@ -38,22 +46,31 @@ export default function PDFViewer({ fileContent, onPageChange, children, width =
     }
 
     return (
-        <div className="flex flex-col items-center">
-            <div className="border rounded-lg overflow-hidden shadow-md mb-4 relative" style={{ width: width }}>
-                <Document
-                    file={fileContent}
-                    onLoadSuccess={onDocumentLoadSuccess}
-                    className="max-w-full"
-                >
-                    <Page
-                        pageNumber={pageNumber}
-                        width={width}
-                        renderTextLayer={false}
-                        renderAnnotationLayer={false}
-                        onLoadSuccess={onPageLoadSuccess}
-                    />
-                </Document>
-                {children && <div className="absolute inset-0 z-10 pointer-events-none">{children}</div>}
+        <div className="flex flex-col items-center w-full">
+            <div className="border rounded-lg overflow-hidden shadow-md mb-4 relative bg-gray-100 min-h-[600px] flex items-center justify-center" style={{ width: width }}>
+                {error ? (
+                    <div className="text-red-500 p-4 text-center">
+                        <p>Failed to load PDF</p>
+                        <p className="text-sm text-gray-500">{error.message}</p>
+                    </div>
+                ) : (
+                    <Document
+                        file={fileContent}
+                        onLoadSuccess={onDocumentLoadSuccess}
+                        onLoadError={onDocumentLoadError}
+                        className="max-w-full"
+                        loading={<div className="text-gray-500">Loading PDF...</div>}
+                    >
+                        <Page
+                            pageNumber={pageNumber}
+                            width={width}
+                            renderTextLayer={false}
+                            renderAnnotationLayer={false}
+                            onLoadSuccess={onPageLoadSuccess}
+                        />
+                    </Document>
+                )}
+                {children && !error && <div className="absolute inset-0 z-10 pointer-events-none">{children}</div>}
             </div>
 
             <div className="flex items-center gap-4">
