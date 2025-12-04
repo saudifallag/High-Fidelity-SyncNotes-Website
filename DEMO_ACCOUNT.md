@@ -6,38 +6,13 @@ We've added a demo account feature for quick testing!
 
 **Demo Credentials:**
 - Email: `demo@syncnotes.com`
-- Password: `demo1234`
+- Password: `demo12`
 
-## How to Set Up Demo Account
+## How it Works
 
-Since we're using Firebase Authentication, you need to create this demo account in your Firebase project:
+The demo account is hardcoded into the authentication system to ensure it's always available, regardless of the database state. You do not need to create this account manually.
 
-### Option 1: Via Firebase Console (Easiest)
-
-1. Go to [Firebase Console](https://console.firebase.google.com/)
-2. Select your project
-3. Navigate to **Authentication** → **Users** tab
-4. Click **"Add user"**
-5. Enter:
-   - Email: `demo@syncnotes.com`
-   - Password: `demo1234`
-6. Click **"Add user"**
-
-### Option 2: Via Sign Up (Alternative)
-
-1. Run your app locally: `npm run dev`
-2. Go to http://localhost:3000
-3. Click **"Sign In"** → **"Sign Up"** tab
-4. Enter:
-   - Email: `demo@syncnotes.com`
-   - Password: `demo1234`
-5. Create account
-
----
-
-## Using the Demo Account
-
-Once the demo account is created, users can:
+### Using the Demo Account
 
 1. **From Welcome Page:**
    - Click **"Try Demo Account"** button
@@ -45,12 +20,12 @@ Once the demo account is created, users can:
 
 2. **From Auth Modal:**
    - Click **"Sign In"**
-   - Click **"Use Demo Account"** link (bottom right)
+   - Click **"Try Demo Account"** button
    - Automatically logs in
 
 3. **Manual Login:**
    - Email: `demo@syncnotes.com`
-   - Password: `demo1234`
+   - Password: `demo12`
 
 ---
 

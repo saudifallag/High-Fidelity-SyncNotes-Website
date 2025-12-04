@@ -6,6 +6,14 @@ import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
+const DEMO_USER = {
+    id: "demo-user-id",
+    name: "Demo User",
+    email: "demo@syncnotes.com",
+    image: null,
+    subscriptionTier: "STUDENT"
+};
+
 const handler = NextAuth({
     adapter: PrismaAdapter(prisma),
     providers: [
@@ -20,6 +28,12 @@ const handler = NextAuth({
                 if (!credentials?.email || !credentials?.password) {
                     console.log("Missing credentials");
                     return null;
+                }
+
+                // Hardcoded demo user check - bypasses DB
+                if (credentials.email === "demo@syncnotes.com" && credentials.password === "demo12") {
+                    console.log("Demo user login successful");
+                    return DEMO_USER;
                 }
 
                 const user = await prisma.user.findUnique({
@@ -57,6 +71,13 @@ const handler = NextAuth({
         async session({ session, token }) {
             if (session?.user) {
                 (session.user as any).id = token.sub as string;
+
+                // If it's the demo user, return hardcoded data without DB lookup
+                if (token.sub === DEMO_USER.id) {
+                    (session.user as any).subscriptionTier = DEMO_USER.subscriptionTier;
+                    return session;
+                }
+
                 // Fetch latest user data to get subscription tier
                 const user = await prisma.user.findUnique({
                     where: { id: token.sub as string }
