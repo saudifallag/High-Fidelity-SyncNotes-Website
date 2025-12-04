@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { signIn } from 'next-auth/react'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -91,12 +92,12 @@ export function PublicHeader() {
     return (
         <header className="border-b border-gray-200 bg-white/80 backdrop-blur-sm sticky top-0 z-40">
             <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-                <div className="flex items-center gap-2 cursor-pointer" onClick={() => router.push('/')}>
+                <Link href="/" className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
                     <div className="w-10 h-10 bg-teal-600 rounded-lg flex items-center justify-center">
                         <span className="text-white font-bold text-lg">SN</span>
                     </div>
                     <span className="text-2xl font-bold text-gray-900">SyncNotes</span>
-                </div>
+                </Link>
 
                 <div className="flex items-center gap-4">
                     <Dialog open={isSignInOpen} onOpenChange={setIsSignInOpen}>
@@ -238,6 +239,6 @@ export function PublicHeader() {
                     </Dialog>
                 </div>
             </div>
-        </header>
+        </header >
     )
 }

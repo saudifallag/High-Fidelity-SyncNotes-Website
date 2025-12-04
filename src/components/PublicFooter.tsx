@@ -9,12 +9,12 @@ export function PublicFooter() {
             <div className="container mx-auto">
                 <div className="grid md:grid-cols-4 gap-8">
                     <div>
-                        <div className="flex items-center gap-2 mb-4">
+                        <Link href="/" className="flex items-center gap-2 mb-4 hover:opacity-80 transition-opacity inline-flex">
                             <div className="w-8 h-8 bg-teal-600 rounded-lg flex items-center justify-center">
                                 <span className="text-white font-bold text-sm">SN</span>
                             </div>
                             <span className="text-xl font-bold text-white">SyncNotes</span>
-                        </div>
+                        </Link>
                         <p className="text-sm">
                             The intelligent note-taking platform for modern learners and professionals.
                         </p>

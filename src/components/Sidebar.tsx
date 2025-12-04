@@ -36,12 +36,12 @@ export function Sidebar() {
     <aside className="w-64 bg-[#2d3748] text-white flex flex-col h-screen sticky top-0">
       {/* Logo */}
       <div className="p-6 border-b border-gray-700">
-        <div className="flex items-center gap-3">
+        <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
           <div className="w-10 h-10 bg-[#14b8a6] rounded-lg flex items-center justify-center">
             <span className="font-bold text-white">SN</span>
           </div>
           <span className="font-bold text-xl">SyncNotes</span>
-        </div>
+        </Link>
       </div>
 
       {/* Navigation Links */}
