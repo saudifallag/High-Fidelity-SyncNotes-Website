@@ -119,7 +119,8 @@ const handler = NextAuth({
     session: {
         strategy: "jwt",
     },
-    secret: process.env.NEXTAUTH_SECRET,
+    // Fallback secret for demo/development if env var is missing
+    secret: process.env.NEXTAUTH_SECRET || "fallback-secret-for-demo-only-do-not-use-in-production",
 });
 
 export { handler as GET, handler as POST };
