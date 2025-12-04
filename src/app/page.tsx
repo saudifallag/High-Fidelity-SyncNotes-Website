@@ -1038,7 +1038,7 @@ export default function WelcomePage() {
               </div>
               <CardHeader className="text-center">
                 <CardTitle className="text-2xl">Student</CardTitle>
-                <div className="text-4xl font-bold">$3<span className="text-lg text-gray-600">/month</span></div>
+                <div className="text-4xl font-bold">$5<span className="text-lg text-gray-600">/month</span></div>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-3">
@@ -1068,7 +1068,7 @@ export default function WelcomePage() {
             >
               <CardHeader className="text-center">
                 <CardTitle className="text-2xl">Pro</CardTitle>
-                <div className="text-4xl font-bold">$9<span className="text-lg text-gray-600">/month</span></div>
+                <div className="text-4xl font-bold">$10<span className="text-lg text-gray-600">/month</span></div>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-3">
