@@ -38,4 +38,5 @@ model Note {
   userId        String
   user          User     @relation("CreatedNotes", fields: [userId], references: [id], onDelete: Cascade)
   collaborators User[]   @relation("SharedNotes")
+  tags          String[]
 }

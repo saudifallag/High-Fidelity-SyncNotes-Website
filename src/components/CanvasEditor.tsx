@@ -32,10 +32,21 @@ export default function CanvasEditor({ fileContent, initialAnnotations, onSave, 
             isDrawingMode: true,
             width: width,
             height: height,
-            backgroundColor: transparent ? 'transparent' : undefined // Ensure transparent bg
+            backgroundColor: transparent ? 'transparent' : undefined
         })
 
         setFabricCanvas(canvas)
+
+        // Auto-save on changes
+        const saveHandler = () => {
+            const json = JSON.stringify(canvas.toJSON())
+            onSave(json)
+        }
+
+        canvas.on('path:created', saveHandler)
+        canvas.on('object:modified', saveHandler)
+        canvas.on('object:added', saveHandler)
+        canvas.on('object:removed', saveHandler)
 
         return () => {
             canvas.dispose()

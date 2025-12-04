@@ -20,6 +20,7 @@ interface Note {
     fileContent?: string | null
     fileType?: string | null
     annotations?: string | null
+    tags?: string[]
     updatedAt: string
 }
 
@@ -27,14 +28,18 @@ interface NoteEditorProps {
     note: Note | null
     onSave: (note: Partial<Note>) => void
     onDelete: (id: string) => void
+    onShare: () => void
 }
 
-export default function NoteEditor({ note, onSave, onDelete }: NoteEditorProps) {
+const AVAILABLE_TAGS = ['Math', 'Work', 'Ideas', 'Personal', 'Urgent']
+
+export default function NoteEditor({ note, onSave, onDelete, onShare }: NoteEditorProps) {
     const [title, setTitle] = useState("")
     const [content, setContent] = useState("")
     const [fileContent, setFileContent] = useState<string | null>(null)
     const [fileType, setFileType] = useState<string | null>(null)
     const [annotations, setAnnotations] = useState<string | null>(null)
+    const [tags, setTags] = useState<string[]>([])
     const [pdfDimensions, setPdfDimensions] = useState<{ width: number; height: number } | null>(null)
     const [isSaving, setIsSaving] = useState(false)
 
@@ -45,12 +50,14 @@ export default function NoteEditor({ note, onSave, onDelete }: NoteEditorProps) 
             setFileContent(note.fileContent || null)
             setFileType(note.fileType || null)
             setAnnotations(note.annotations || null)
+            setTags(note.tags || [])
         } else {
             setTitle("")
             setContent("")
             setFileContent(null)
             setFileType(null)
             setAnnotations(null)
+            setTags([])
         }
     }, [note])
 
@@ -64,6 +71,7 @@ export default function NoteEditor({ note, onSave, onDelete }: NoteEditorProps) 
             fileContent,
             fileType,
             annotations,
+            tags
         })
         setIsSaving(false)
     }
@@ -81,16 +89,58 @@ export default function NoteEditor({ note, onSave, onDelete }: NoteEditorProps) 
         }
     }
 
+    const toggleTag = (tag: string) => {
+        setTags(prev =>
+            prev.includes(tag)
+                ? prev.filter(t => t !== tag)
+                : [...prev, tag]
+        )
+    }
+
+    if (!note) {
+        return (
+            <div className="h-full flex items-center justify-center text-gray-400">
+                Select a note to edit or create a new one
+            </div>
+        )
+    }
+
     return (
         <div className="h-full flex flex-col gap-6 p-6 max-w-7xl mx-auto">
-            <div className="flex justify-between items-center">
-                <Input
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Note Title"
-                    className="text-2xl font-bold border-none shadow-none focus-visible:ring-0 px-0 h-auto"
-                />
-                <div className="flex gap-2">
+            <div className="flex justify-between items-start gap-4">
+                <div className="flex-1 space-y-4">
+                    <Input
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        placeholder="Note Title"
+                        className="text-2xl font-bold border-transparent hover:border-gray-200 focus:border-teal-500 transition-colors px-2 h-auto -ml-2"
+                    />
+
+                    {/* Tags Selection */}
+                    <div className="flex flex-wrap gap-2 items-center">
+                        {AVAILABLE_TAGS.map(tag => (
+                            <button
+                                key={tag}
+                                onClick={() => toggleTag(tag)}
+                                className={`px-3 py-1 rounded-full text-xs font-medium transition-colors border ${tags.includes(tag)
+                                    ? 'bg-teal-100 text-teal-700 border-teal-200'
+                                    : 'bg-white text-gray-600 border-gray-200 hover:border-teal-200'
+                                    }`}
+                            >
+                                {tag} {tags.includes(tag) && '✓'}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="flex gap-2 shrink-0">
+                    <Button
+                        variant="outline"
+                        onClick={onShare}
+                        className="text-gray-600 hover:text-teal-600"
+                    >
+                        Share
+                    </Button>
                     <Button
                         variant="destructive"
                         size="icon"
@@ -105,7 +155,7 @@ export default function NoteEditor({ note, onSave, onDelete }: NoteEditorProps) 
                 </div>
             </div>
 
-            <div className="flex gap-4 items-center">
+            <div className="flex gap-4 items-center border-b pb-4">
                 <div className="relative">
                     <input
                         type="file"
@@ -131,48 +181,55 @@ export default function NoteEditor({ note, onSave, onDelete }: NoteEditorProps) 
                 )}
             </div>
 
-            {fileContent && (
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-sm font-medium text-gray-500">Annotation Canvas</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        {fileType?.includes('pdf') ? (
-                            <div className="space-y-4">
-                                <PDFViewer
-                                    fileContent={fileContent}
-                                    onPageChange={() => { }} // TODO: Handle multi-page annotations
-                                    width={1000}
-                                    onPageLoad={(dims) => setPdfDimensions(dims)}
-                                >
-                                    <div className="pointer-events-auto w-full h-full">
-                                        <CanvasEditor
-                                            initialAnnotations={annotations || undefined}
-                                            onSave={setAnnotations}
-                                            transparent={true}
-                                            width={pdfDimensions?.width || 1000}
-                                            height={pdfDimensions?.height || 800}
-                                        />
-                                    </div>
-                                </PDFViewer>
-                            </div>
-                        ) : (
-                            <CanvasEditor
-                                fileContent={fileContent}
-                                initialAnnotations={annotations || undefined}
-                                onSave={setAnnotations}
-                            />
-                        )}
-                    </CardContent>
-                </Card>
-            )}
+            <div className="flex flex-col gap-6">
+                {fileContent && (
+                    <Card className="overflow-hidden">
+                        <CardHeader className="bg-gray-50 border-b py-3">
+                            <CardTitle className="text-sm font-medium text-gray-500">Annotation Canvas</CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-0">
+                            {fileType?.includes('pdf') ? (
+                                <div className="bg-gray-100 p-4 flex justify-center">
+                                    <PDFViewer
+                                        fileContent={fileContent}
+                                        onPageChange={() => { }}
+                                        width={1000}
+                                        onPageLoad={(dims) => setPdfDimensions(dims)}
+                                    >
+                                        <div className="pointer-events-auto w-full h-full">
+                                            <CanvasEditor
+                                                initialAnnotations={annotations || undefined}
+                                                onSave={setAnnotations}
+                                                transparent={true}
+                                                width={pdfDimensions?.width || 1000}
+                                                height={pdfDimensions?.height || 800}
+                                            />
+                                        </div>
+                                    </PDFViewer>
+                                </div>
+                            ) : (
+                                <div className="p-4">
+                                    <CanvasEditor
+                                        fileContent={fileContent}
+                                        initialAnnotations={annotations || undefined}
+                                        onSave={setAnnotations}
+                                    />
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                )}
 
-            <Textarea
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder="Start typing your note here..."
-                className="min-h-[300px] resize-none border-gray-200 focus-visible:ring-teal-500"
-            />
+                <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-500">Note Content</label>
+                    <Textarea
+                        value={content}
+                        onChange={(e) => setContent(e.target.value)}
+                        placeholder="Start typing your note here..."
+                        className="min-h-[300px] resize-none border-gray-200 focus-visible:ring-teal-500 text-lg leading-relaxed p-4"
+                    />
+                </div>
+            </div>
         </div>
     )
 }

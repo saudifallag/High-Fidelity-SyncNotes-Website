@@ -1,5 +1,6 @@
 'use client';
 
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
@@ -15,9 +16,20 @@ const projects = [
 export function Sidebar() {
   const { data: session } = useSession();
   const pathname = usePathname();
+  const [filters, setFilters] = useState(projects);
 
   const isActive = (path: string) => {
     return pathname === path || pathname?.startsWith(`${path}/`);
+  };
+
+  const handleAddFilter = () => {
+    const name = prompt("Enter new filter name:");
+    if (name) {
+      // Pick a random color
+      const colors = ['#ef4444', '#f97316', '#84cc16', '#06b6d4', '#8b5cf6', '#ec4899'];
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      setFilters([...filters, { name, color }]);
+    }
   };
 
   return (
@@ -106,12 +118,12 @@ export function Sidebar() {
         <div className="mt-8">
           <div className="px-4 mb-3 flex items-center justify-between text-gray-400 text-xs uppercase tracking-wider">
             <span>Filters</span>
-            <button className="hover:text-white transition-colors">
+            <button onClick={handleAddFilter} className="hover:text-white transition-colors">
               <Plus className="w-4 h-4" />
             </button>
           </div>
           <div className="space-y-2">
-            {projects.map((project) => (
+            {filters.map((project) => (
               <Link
                 key={project.name}
                 href={`/editor?tag=${project.name}`}
@@ -148,4 +160,3 @@ export function Sidebar() {
     </aside>
   );
 }
-

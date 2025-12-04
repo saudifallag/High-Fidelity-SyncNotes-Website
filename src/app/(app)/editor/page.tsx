@@ -113,36 +113,43 @@ function EditorContent() {
     const handleShareNote = async () => {
         if (!selectedNoteId || !shareEmail) return;
 
-        // Check subscription tier (mock check for now, ideally from session)
-        // In a real app, we'd check session.user.subscriptionTier
-        // For this demo, we'll assume everyone can share for testing, 
-        // OR we can fetch the user profile to check.
-
         setShareLoading(true);
         try {
-            const response = await fetch('/api/notes/share', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    noteId: selectedNoteId,
-                    email: shareEmail
-                }),
-            });
+            // Split emails by comma and trim
+            const emails = shareEmail.split(',').map(e => e.trim()).filter(e => e);
 
-            if (response.ok) {
-                alert('Note shared successfully!');
-                setShareEmail('');
-                setIsShareModalOpen(false);
-            } else {
-                const data = await response.json();
-                if (response.status === 403 && data.message.includes('Upgrade')) {
-                    if (confirm("Sharing is a premium feature. Upgrade to Pro?")) {
-                        window.location.href = '/pricing';
+            // Send request for each email (or update API to handle array)
+            // For now, we'll loop sequentially as the API likely expects one email
+            // Ideally, update API to accept array
+            for (const email of emails) {
+                const response = await fetch('/api/notes/share', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        noteId: selectedNoteId,
+                        email: email
+                    }),
+                });
+
+                if (!response.ok) {
+                    const data = await response.json();
+                    if (response.status === 403 && data.message.includes('Upgrade')) {
+                        if (confirm("Sharing is a premium feature. Upgrade to Pro?")) {
+                            window.location.href = '/pricing';
+                            return; // Stop sharing
+                        }
+                    } else {
+                        console.error(`Failed to share with ${email}: ${data.message}`);
+                        // Continue sharing with others or alert?
+                        // For simplicity, we'll just log errors for individual failures
                     }
-                } else {
-                    alert(data.message || 'Failed to share note');
                 }
             }
+
+            alert('Sharing process completed!');
+            setShareEmail('');
+            setIsShareModalOpen(false);
+
         } catch (error) {
             console.error('Failed to share note:', error);
             alert('An error occurred while sharing');
@@ -153,10 +160,9 @@ function EditorContent() {
 
     const filteredNotes = notes.filter((note) => {
         const matchesSearch = note.title.toLowerCase().includes(searchQuery.toLowerCase());
-        // Basic tag filtering simulation (if tags were in DB, we'd check note.tags)
-        // For now, we'll check if the tag is in the title or content as a simple fallback
         const matchesTag = tagFilter
-            ? note.title.toLowerCase().includes(tagFilter.toLowerCase()) ||
+            ? note.tags?.includes(tagFilter) ||
+            note.title.toLowerCase().includes(tagFilter.toLowerCase()) ||
             note.content?.toLowerCase().includes(tagFilter.toLowerCase())
             : true;
         return matchesSearch && matchesTag;
@@ -202,6 +208,13 @@ function EditorContent() {
                             <p className="text-xs text-gray-500 mt-1 truncate">
                                 {note.content || 'No content'}
                             </p>
+                            <div className="flex flex-wrap gap-1 mt-2">
+                                {note.tags?.slice(0, 3).map(tag => (
+                                    <span key={tag} className="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded-full">
+                                        {tag}
+                                    </span>
+                                ))}
+                            </div>
                             <div className="flex items-center gap-2 mt-2 text-xs text-gray-400">
                                 <FileText className="w-3 h-3" />
                                 <span>{new Date(note.updatedAt).toLocaleDateString()}</span>
@@ -219,23 +232,12 @@ function EditorContent() {
             {/* Main Editor Area */}
             <div className="flex-1 bg-gray-50 overflow-hidden relative">
                 {selectedNote ? (
-                    <>
-                        <div className="absolute top-4 right-4 z-10">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setIsShareModalOpen(true)}
-                                className="bg-white"
-                            >
-                                Share
-                            </Button>
-                        </div>
-                        <NoteEditor
-                            note={selectedNote}
-                            onSave={handleSaveNote}
-                            onDelete={handleDeleteNote}
-                        />
-                    </>
+                    <NoteEditor
+                        note={selectedNote}
+                        onSave={handleSaveNote}
+                        onDelete={handleDeleteNote}
+                        onShare={() => setIsShareModalOpen(true)}
+                    />
                 ) : (
                     <div className="h-full flex flex-col items-center justify-center text-gray-400">
                         <FileText className="w-16 h-16 mb-4 opacity-20" />
@@ -250,10 +252,10 @@ function EditorContent() {
                     <div className="bg-white p-6 rounded-lg shadow-xl w-96">
                         <h3 className="text-lg font-semibold mb-4">Share Note</h3>
                         <p className="text-sm text-gray-500 mb-4">
-                            Enter the email address of the user you want to share this note with.
+                            Enter email addresses separated by commas.
                         </p>
                         <Input
-                            placeholder="user@example.com"
+                            placeholder="user1@example.com, user2@example.com"
                             value={shareEmail}
                             onChange={(e) => setShareEmail(e.target.value)}
                             className="mb-4"
