@@ -2,8 +2,11 @@
 
 import Link from 'next/link'
 import { Separator } from '@/components/ui/separator'
+import { useModal } from '@/context/ModalContext'
 
 export function PublicFooter() {
+    const { openModal } = useModal()
+
     return (
         <footer className="bg-gray-900 text-gray-300 py-12 px-4">
             <div className="container mx-auto">
@@ -22,25 +25,61 @@ export function PublicFooter() {
                     <div>
                         <h4 className="font-semibold text-white mb-4">Product</h4>
                         <ul className="space-y-2 text-sm">
-                            <li><Link href="/#features" className="hover:text-white transition-colors">Features</Link></li>
-                            <li><Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link></li>
-                            <li><Link href="/#security" className="hover:text-white transition-colors">Security</Link></li>
+                            <li>
+                                <button onClick={() => openModal('features')} className="hover:text-white transition-colors text-left">
+                                    Features
+                                </button>
+                            </li>
+                            <li>
+                                <button onClick={() => openModal('pricing')} className="hover:text-white transition-colors text-left">
+                                    Pricing
+                                </button>
+                            </li>
+                            <li>
+                                <button onClick={() => openModal('security')} className="hover:text-white transition-colors text-left">
+                                    Security
+                                </button>
+                            </li>
                         </ul>
                     </div>
                     <div>
                         <h4 className="font-semibold text-white mb-4">Company</h4>
                         <ul className="space-y-2 text-sm">
-                            <li><Link href="/about" className="hover:text-white transition-colors">About</Link></li>
-                            <li><Link href="/blog" className="hover:text-white transition-colors">Blog</Link></li>
-                            <li><Link href="/contact" className="hover:text-white transition-colors">Contact</Link></li>
+                            <li>
+                                <button onClick={() => openModal('about')} className="hover:text-white transition-colors text-left">
+                                    About
+                                </button>
+                            </li>
+                            <li>
+                                <button onClick={() => openModal('blog')} className="hover:text-white transition-colors text-left">
+                                    Blog
+                                </button>
+                            </li>
+                            <li>
+                                <button onClick={() => openModal('support')} className="hover:text-white transition-colors text-left">
+                                    Contact
+                                </button>
+                            </li>
                         </ul>
                     </div>
                     <div>
                         <h4 className="font-semibold text-white mb-4">Support</h4>
                         <ul className="space-y-2 text-sm">
-                            <li><Link href="/support" className="hover:text-white transition-colors">Help Center</Link></li>
-                            <li><Link href="/support#faq" className="hover:text-white transition-colors">FAQ</Link></li>
-                            <li><Link href="/status" className="hover:text-white transition-colors">Status</Link></li>
+                            <li>
+                                <button onClick={() => openModal('support')} className="hover:text-white transition-colors text-left">
+                                    Help Center
+                                </button>
+                            </li>
+                            <li>
+                                <button onClick={() => openModal('support')} className="hover:text-white transition-colors text-left">
+                                    FAQ
+                                </button>
+                            </li>
+                            <li>
+                                <button onClick={() => openModal('status')} className="hover:text-white transition-colors text-left">
+                                    Status
+                                </button>
+                            </li>
                         </ul>
                     </div>
                 </div>

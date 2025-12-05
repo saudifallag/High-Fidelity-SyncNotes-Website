@@ -1,5 +1,7 @@
 import { PublicHeader } from '@/components/PublicHeader'
 import { PublicFooter } from '@/components/PublicFooter'
+import { ModalProvider } from '@/context/ModalContext'
+import { PublicModals } from '@/components/PublicModals'
 
 export default function PublicLayout({
     children,
@@ -7,12 +9,15 @@ export default function PublicLayout({
     children: React.ReactNode
 }) {
     return (
-        <div className="min-h-screen flex flex-col">
-            <PublicHeader />
-            <main className="flex-1">
-                {children}
-            </main>
-            <PublicFooter />
-        </div>
+        <ModalProvider>
+            <div className="min-h-screen flex flex-col">
+                <PublicHeader />
+                <main className="flex-1">
+                    {children}
+                </main>
+                <PublicFooter />
+                <PublicModals />
+            </div>
+        </ModalProvider>
     )
 }
